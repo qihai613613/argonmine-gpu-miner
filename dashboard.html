@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Argonmine 看板</title>
+<style>
+  :root{
+    --bg:#0b0b0a; --panel:#141413; --panel2:#191918; --line:#2a2a27;
+    --ink:#f2f1ec; --muted:#9b9a92; --muted2:#6f6e67;
+    --accent:#e0a63a; --accent2:#f2c56b; --ok:#3fb950; --bad:#f85149; --warn:#d29922;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(224,166,58,.10), transparent 60%),
+      radial-gradient(700px 400px at 100% 0%, rgba(224,166,58,.06), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+    font-size:14px; line-height:1.45; min-height:100vh;
+  }
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1280px;margin:0 auto;padding:26px 22px 34px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.02em;font-size:18px}
+  .brand .mark{width:32px;height:32px;border-radius:9px;background:var(--accent);display:grid;place-items:center;color:#141413}
+  .brand small{color:var(--muted);font-weight:650;letter-spacing:.12em;font-size:11px;margin-left:2px}
+  .netstate{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted2);box-shadow:0 0 0 3px rgba(255,255,255,.03)}
+  .dot.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(63,185,80,.12)}
+  .dot.bad{background:var(--bad);box-shadow:0 0 0 3px rgba(248,81,73,.12)}
+  .hero{display:grid;grid-template-columns:1.6fr 1.3fr .9fr .9fr;gap:14px}
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:18px;min-width:0}
+  .label{color:var(--muted);font-size:12px;font-weight:650;letter-spacing:.06em;text-transform:uppercase}
+  .value{font-size:clamp(30px,3.6vw,44px);font-weight:780;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:8px;overflow-wrap:anywhere}
+  .value small{font-size:15px;color:var(--muted);font-weight:650;letter-spacing:0;margin-left:6px}
+  .sub{color:var(--muted);font-size:12px;margin-top:7px;min-height:18px}
+  .spark{width:100%;height:58px;display:block;margin-top:10px}
+  .rate-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .rate-input{width:min(150px,55%);height:46px;font:inherit;font-size:26px;font-weight:750;letter-spacing:-.02em;color:var(--ink);background:#0f0f0e;border:1px solid var(--line);border-radius:11px;padding:0 10px;outline:none;font-variant-numeric:tabular-nums}
+  .rate-input:focus{border-color:var(--accent)}
+  select{height:46px;background:#0f0f0e;color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:0 9px;font:inherit;outline:none}
+  select:focus{border-color:var(--accent)}
+  .edit-hint{color:var(--accent2);letter-spacing:0;text-transform:none;font-weight:600;font-size:11px;margin-left:4px}
+  .bar{height:6px;background:#0e0e0d;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin-top:13px}
+  .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .4s ease}
+  .totals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px}
+  .tcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+  .tcard span{display:block;color:var(--muted);font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase}
+  .tcard b{display:block;font-size:21px;font-weight:760;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:3px;overflow-wrap:anywhere}
+  .tcard b small{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0;margin-left:4px}
+  .addrs{margin-top:14px}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+  .section-head h2{font-size:18px;margin:0;letter-spacing:-.01em}
+  .section-head p{margin:4px 0 0;color:var(--muted);font-size:12px}
+  .add-form{display:flex;gap:8px;flex:1;justify-content:flex-end;min-width:min(520px,100%)}
+  .add-form input{flex:1;height:42px;background:#0f0f0e;border:1px solid var(--line);border-radius:11px;color:var(--ink);font:inherit;padding:0 12px;outline:none;min-width:0}
+  .add-form input:focus{border-color:var(--accent)}
+  .add-form button{height:42px;padding:0 18px;border:0;border-radius:11px;background:var(--accent);color:#151412;font:inherit;font-weight:750;cursor:pointer}
+  .add-form button:hover{background:var(--accent2)}
+  .err{color:var(--bad);font-size:12px;min-height:0;margin:4px 0}
+  .addr-list{display:flex;flex-direction:column;gap:0}
+  .addr{border-top:1px solid var(--line);padding:16px 2px}
+  .addr:first-child{border-top:0;padding-top:2px}
+  .addr-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .addr-link{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;color:var(--ink);overflow-wrap:anywhere}
+  .rm{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;font:inherit;font-size:11px;padding:4px 8px;cursor:pointer}
+  .rm:hover{color:var(--bad);border-color:rgba(248,81,73,.4)}
+  .addr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:11px}
+  .addr-grid > div{background:#0f0f0e;border:1px solid #232320;border-radius:11px;padding:10px 12px;min-width:0}
+  .addr-grid span{display:block;color:var(--muted2);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+  .addr-grid b{display:block;font-size:16px;font-weight:740;font-variant-numeric:tabular-nums;margin-top:2px;overflow-wrap:anywhere}
+  .addr-grid b small{font-size:11px;color:var(--muted);font-weight:600;margin-left:3px}
+  .addr-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:9px;font-variant-numeric:tabular-nums}
+  .addr-foot .ref{color:var(--ok)}
+  .empty{color:var(--muted2);text-align:center;padding:26px 10px;font-size:13px}
+  .grid2{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,.85fr);gap:14px;margin-top:14px}
+  .chart-card canvas{width:100%;height:224px;display:block}
+  .chart-card .muted, .muted{color:var(--muted2);font-size:11px;font-variant-numeric:tabular-nums}
+  .recent{display:flex;flex-direction:column}
+  .recent-row{display:grid;grid-template-columns:58px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:12px;font-variant-numeric:tabular-nums}
+  .recent-row:first-child{border-top:0}
+  .recent-row .h{color:var(--accent2);font-weight:700}
+  .recent-row .a{font-family:ui-monospace,Consolas,monospace;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .recent-row .v{font-weight:700;color:var(--ok);white-space:nowrap}
+  .recent-row .t{color:var(--muted2);font-size:11px;white-space:nowrap}
+  footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted2);font-size:11px;margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+  @media (max-width:1050px){
+    .hero{grid-template-columns:1fr 1fr}
+    .grid2{grid-template-columns:1fr}
+  }
+  @media (max-width:680px){
+    .wrap{padding:18px 14px 28px}
+    .hero,.totals{grid-template-columns:1fr 1fr}
+    .totals .tcard:nth-child(3),.totals .tcard:nth-child(4){margin-top:0}
+    .addr-grid{grid-template-columns:1fr 1fr}
+    .add-form{min-width:100%}
+    .value{font-size:32px}
+  }
+  @media (max-width:460px){
+    .hero,.totals{grid-template-columns:1fr}
+    .recent-row{grid-template-columns:48px minmax(0,1fr) auto}
+    .recent-row .t{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.5 20.5 8v8L12 21.5 3.5 16V8L12 2.5Z"/>
+          <path d="M12 2.5v19M3.5 8l8.5 4.5L20.5 8M12 12.5 20.5 16M12 12.5 3.5 16"/>
+        </svg>
+      </span>
+      ARGONMINE <small>DASHBOARD</small>
+    </div>
+    <div class="netstate">
+      <span id="apiDot" class="dot"></span>
+      <span id="apiText">连接官方 API…</span>
+      <span id="updated"></span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="card">
+      <div class="label">全网算力</div>
+      <div class="value" id="netHash">—</div>
+      <div class="sub" id="netSub">—</div>
+      <canvas id="netChart" class="spark"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="label">我的算力 <span class="edit-hint">手动输入</span></div>
+      <div class="rate-row">
+        <input id="myRate" class="rate-input" type="number" min="0" step="0.01" placeholder="13.5" inputmode="decimal">
+        <select id="myUnit" aria-label="算力单位">
+          <option value="1">H/s</option>
+          <option value="1000" selected>kH/s</option>
+          <option value="1000000">MH/s</option>
+        </select>
+      </div>
+      <div class="sub" id="mySub">输入你的算力，例如 13.5 kH/s</div>
+    </div>
+
+    <div class="card">
+      <div class="label">算力占比</div>
+      <div class="value" id="share">—</div>
+      <div class="sub" id="shareSub">—</div>
+      <div class="bar"><i id="shareBar"></i></div>
+    </div>
+
+    <div class="card">
+      <div class="label">网络高度</div>
+      <div class="value" id="height">—</div>
+      <div class="sub" id="diff">难度 —</div>
+      <div class="sub" id="miners">矿工 —</div>
+    </div>
+  </section>
+
+  <section class="totals">
+    <div class="tcard"><span>地址总产出</span><b id="totalMined">—</b></div>
+    <div class="tcard"><span>总余额</span><b id="totalBalance">—</b></div>
+    <div class="tcard"><span>成熟中</span><b id="totalMaturing">—</b></div>
+    <div class="tcard"><span>可花</span><b id="totalSpendable">—</b></div>
+  </section>
+
+  <section class="card addrs">
+    <div class="section-head">
+      <div>
+        <h2>地址与产出</h2>
+        <p>添加你的 arg1... 地址，数据直接来自官方 explorer。</p>
+      </div>
+      <form id="addForm" class="add-form" autocomplete="off">
+        <input id="addrInput" placeholder="arg1..." spellcheck="false" autocomplete="off">
+        <button type="submit">添加地址</button>
+      </form>
+    </div>
+    <div id="addrError" class="err"></div>
+    <div id="addrList" class="addr-list"></div>
+    <div id="addrEmpty" class="empty">还没有地址。添加后显示余额、已挖、成熟中、可花和最近出块。</div>
+  </section>
+
+  <section class="grid2">
+    <div class="card chart-card">
+      <div class="section-head" style="margin-bottom:4px">
+        <h2>全网算力趋势</h2>
+        <span id="chartRange" class="muted"></span>
+      </div>
+      <canvas id="bigChart"></canvas>
+    </div>
+    <div class="card">
+      <div class="section-head" style="margin-bottom:2px"><h2>最近出块</h2></div>
+      <div id="recent" class="recent"></div>
+      <div id="recentEmpty" class="empty">暂无出块记录。</div>
+    </div>
+  </section>
+
+  <footer>
+    <span>数据：explorer.argonmine.com · 算力手动输入 · 地址每 5 秒刷新</span>
+    <span id="footerRight">—</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // When the page is served by dashboard.py, use the local proxy (same
+  // origin). When opened directly as a file, talk to the explorer directly.
+  const API = location.protocol === "file:" ? "https://explorer.argonmine.com" : "";
+  const LS_ADDR = "argonmine.dashboard.addresses.v1";
+  const LS_RATE = "argonmine.dashboard.rate.v1";
+  const LS_UNIT = "argonmine.dashboard.unit.v1";
+
+  const $ = (id) => document.getElementById(id);
+  const rateEl = $("myRate"), unitEl = $("myUnit");
+  const addrInput = $("addrInput"), addrError = $("addrError");
+  const addrList = $("addrList"), addrEmpty = $("addrEmpty");
+  const recentEl = $("recent"), recentEmpty = $("recentEmpty");
+
+  let addresses = loadAddresses();
+  let net = null, chart = null, miners = null;
+  let addrData = new Map();
+  let myRateHs = 0;
+  let netHist = [];
+  let lastChart = 0, lastMiners = 0;
+  let busy = false;
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtHash(v){
+    v = Number(v);
+    if (!isFinite(v) || v <= 0) return "—";
+    if (v >= 1e9) return (v/1e9).toFixed(2) + " GH/s";
+    if (v >= 1e6) return (v/1e6).toFixed(2) + " MH/s";
+    if (v >= 1e3) return (v/1e3).toFixed(2) + " kH/s";
+    return v.toFixed(1) + " H/s";
+  }
+  function fmtArg(units, digits){
+    const v = Number(units) / 1e8;
+    if (!isFinite(v)) return "—";
+    const d = digits == null ? 4 : digits;
+    return v.toLocaleString(undefined, {minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  function fmtPct(v){
+    if (!isFinite(v) || v <= 0) return "—";
+    return v >= 10 ? v.toFixed(1) + "%" : v.toFixed(2) + "%";
+  }
+  function fmtDur(s){
+    s = Number(s);
+    if (!isFinite(s) || s < 0) return "—";
+    if (s < 90) return Math.round(s) + " 秒";
+    if (s < 5400) return (s/60).toFixed(1) + " 分钟";
+    if (s < 172800) return (s/3600).toFixed(1) + " 小时";
+    return (s/86400).toFixed(1) + " 天";
+  }
+  function shortAddr(a){
+    return a.length > 22 ? a.slice(0, 10) + "…" + a.slice(-6) : a;
+  }
+  function timeAgo(unix){
+    if (!unix) return "—";
+    const s = Math.max(0, Date.now()/1000 - Number(unix));
+    if (s < 90) return Math.round(s) + " 秒前";
+    if (s < 5400) return Math.round(s/60) + " 分钟前";
+    if (s < 172800) return (s/3600).toFixed(1) + " 小时前";
+    return (s/86400).toFixed(1) + " 天前";
+  }
+  function loadAddresses(){
+    try {
+      const a = JSON.parse(localStorage.getItem(LS_ADDR) || "[]");
+      if (!Array.isArray(a)) return [];
+      const seen = new Set();
+      return a.map(x => String(x).trim().toLowerCase())
+        .filter(x => /^arg1[0-9a-z]{20,90}$/.test(x) && !seen.has(x) && seen.add(x))
+        .slice(0, 30);
+    } catch (e) { return []; }
+  }
+  function saveAddresses(){
+    try { localStorage.setItem(LS_ADDR, JSON.stringify(addresses)); } catch (e) {}
+  }
+  function loadRate(){
+    try {
+      rateEl.value = localStorage.getItem(LS_RATE) || "";
+      unitEl.value = localStorage.getItem(LS_UNIT) || "1000";
+    } catch (e) {}
+    updateMy();
+  }
+  function saveRate(){
+    try {
+      localStorage.setItem(LS_RATE, rateEl.value);
+      localStorage.setItem(LS_UNIT, unitEl.value);
+    } catch (e) {}
+    updateMy();
+  }
+  function updateMy(){
+    const n = parseFloat(rateEl.value);
+    myRateHs = (isFinite(n) && n > 0 ? n : 0) * Number(unitEl.value || 1);
+    const netRate = net && Number(net.hashrate) > 0 ? Number(net.hashrate) : 0;
+    const share = (netRate > 0 && myRateHs > 0) ? (myRateHs / netRate * 100) : 0;
+    $("share").textContent = myRateHs > 0 ? fmtPct(share) : "—";
+    $("shareBar").style.width = Math.min(100, Math.max(share > 0 ? 1 : 0, share)) + "%";
+    const parts = [];
+    if (myRateHs > 0) parts.push("≈ " + Math.round(myRateHs).toLocaleString() + " H/s");
+    if (netRate > 0 && myRateHs > 0) {
+      const interval = lastInterval();
+      if (interval > 0) {
+        const eta = interval * netRate / myRateHs;
+        if (eta > 0) parts.push("预计出块 " + fmtDur(eta));
+      }
+    }
+    $("mySub").textContent = parts.length ? parts.join(" · ") : "输入你的算力，例如 13.5 kH/s";
+    $("shareSub").textContent = netRate > 0
+      ? "全网 " + fmtHash(netRate) + (miners && miners.online != null ? " · 在线 " + miners.online + " 台" : "")
+      : "等待全网数据…";
+  }
+  function lastInterval(){
+    if (!chart || !Array.isArray(chart.points) || !chart.points.length) return 0;
+    const pts = chart.points.slice(-20).map(p => Number(p.interval)).filter(x => isFinite(x) && x > 0);
+    if (!pts.length) return 0;
+    const avg = pts.reduce((a,b)=>a+b,0) / pts.length;
+    return Math.max(1, Math.min(600, avg));
+  }
+
+  async function fetchJSON(path){
+    const r = await fetch(API + path, {cache:"no-store", headers:{"Accept":"application/json"}});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  }
+
+  async function refreshNetwork(){
+    try {
+      net = await fetchJSON("/api/stats");
+      $("apiDot").className = "dot ok";
+      $("apiText").textContent = "官方 API 正常";
+      $("netHash").textContent = fmtHash(net.hashrate);
+      $("netSub").textContent = "供应 " + fmtArg(net.supply, 2) + " ARG · 高度 " + (net.indexedHeight ?? "—");
+      $("height").textContent = net.indexedHeight ?? net.nodeHeight ?? "—";
+      updateMy();
+    } catch (e) {
+      $("apiDot").className = "dot bad";
+      $("apiText").textContent = "官方 API 异常";
+      $("netSub").textContent = "读取失败：" + e.message;
+    }
+  }
+
+  async function refreshCharts(){
+    try {
+      chart = await fetchJSON("/api/charts?n=288");
+      const pts = (chart.points || []);
+      netHist = pts.map(p => Number(p.hashrate)).filter(v => isFinite(v));
+      if (pts.length) {
+        const last = pts[pts.length - 1];
+        $("diff").textContent = "难度 " + Number(last.difficulty).toFixed(2);
+        $("chartRange").textContent = "#" + pts[0].h + " – #" + last.h;
+      }
+      lastChart = Date.now();
+      drawAll();
+    } catch (e) {
+      $("diff").textContent = "难度读取失败";
+    }
+  }
+
+  async function refreshMiners(){
+    try {
+      miners = await fetchJSON("/api/miners");
+      $("miners").textContent = "矿工 在线 " + (miners.online ?? "—") + " · 24h " + (miners.day ?? "—");
+      lastMiners = Date.now();
+      updateMy();
+    } catch (e) {
+      $("miners").textContent = "矿工 —";
+    }
+  }
+
+  async function refreshAddresses(){
+    if (!addresses.length) { addrData = new Map(); renderAddresses(); return; }
+    const results = await Promise.allSettled(addresses.map(a =>
+      fetchJSON("/api/address/" + encodeURIComponent(a)).then(d => ({a, d}))
+    ));
+    const next = new Map();
+    results.forEach((r, i) => {
+      const a = addresses[i];
+      if (r.status === "fulfilled" && r.value && r.value.d) next.set(a, r.value.d);
+      else next.set(a, {error: (r.reason && r.reason.message) ? r.reason.message : "读取失败"});
+    });
+    addrData = next;
+    renderAddresses();
+  }
+
+  function renderAddresses(){
+    addrList.innerHTML = "";
+    addrEmpty.hidden = addresses.length > 0;
+    if (!addresses.length) {
+      ["totalMined","totalBalance","totalMaturing","totalSpendable"].forEach(id => $(id).textContent = "—");
+      recentEl.innerHTML = "";
+      recentEmpty.hidden = false;
+      return;
+    }
+    let totalMined = 0, totalBalance = 0, totalMaturing = 0, totalSpendable = 0;
+    const recent = [];
+    const html = addresses.map(a => {
+      const d = addrData.get(a);
+      if (!d || d.error) {
+        return '<div class="addr"><div class="addr-head"><a class="addr-link" href="https://explorer.argonmine.com/address/' + encodeURIComponent(a) + '" target="_blank" rel="noopener">' + esc(shortAddr(a)) + '</a><button class="rm" data-a="' + esc(a) + '">移除</button></div><div class="err">' + esc(d && d.error ? d.error : "加载中…") + '</div></div>';
+      }
+      const mined = Number(d.minedTotal) || 0;
+      const bal = Number(d.balance) || 0;
+      const mat = Number(d.maturing) || 0;
+      const sp = Number(d.spendable) || 0;
+      totalMined += mined; totalBalance += bal; totalMaturing += mat; totalSpendable += sp;
+      const hist = Array.isArray(d.history) ? d.history : [];
+      hist.forEach(x => { if (x.coinbase) recent.push({a, h:x.height, t:x.time, v:x.received, txid:x.txid}); });
+      const last = hist.find(x => x.coinbase);
+      const lastHtml = last
+        ? '最近出块 #' + last.height + ' · +' + fmtArg(last.received) + ' ARG · ' + timeAgo(last.time)
+        : '还没有出块记录';
+      const refHtml = Number(d.referralTotal) > 0
+        ? '<span class="ref">推荐收益 ' + fmtArg(d.referralTotal) + ' ARG</span>' : '';
+      return '<div class="addr">' +
+        '<div class="addr-head"><a class="addr-link" href="https://explorer.argonmine.com/address/' + encodeURIComponent(a) + '" target="_blank" rel="noopener" title="' + esc(a) + '">' + esc(shortAddr(a)) + '</a><button class="rm" data-a="' + esc(a) + '">移除</button></div>' +
+        '<div class="addr-grid">' +
+          '<div><span>已挖</span><b>' + fmtArg(mined) + '<small>ARG</small></b></div>' +
+          '<div><span>块数</span><b>' + (Number(d.minedCount) || 0) + '</b></div>' +
+          '<div><span>余额</span><b>' + fmtArg(bal) + '<small>ARG</small></b></div>' +
+          '<div><span>成熟中</span><b>' + fmtArg(mat) + '<small>ARG</small></b></div>' +
+        '</div>' +
+        '<div class="addr-foot"><span>可花 ' + fmtArg(sp) + ' ARG</span><span>' + lastHtml + '</span>' + refHtml + '</div>' +
+      '</div>';
+    }).join("");
+    addrList.innerHTML = html;
+    $("totalMined").innerHTML = fmtArg(totalMined) + '<small>ARG</small>';
+    $("totalBalance").innerHTML = fmtArg(totalBalance) + '<small>ARG</small>';
+    $("totalMaturing").innerHTML = fmtArg(totalMaturing) + '<small>ARG</small>';
+    $("totalSpendable").innerHTML = fmtArg(totalSpendable) + '<small>ARG</small>';
+
+    recent.sort((x,y) => Number(y.t) - Number(x.t));
+    const rows = recent.slice(0, 12);
+    recentEl.innerHTML = rows.map(r =>
+      '<div class="recent-row"><span class="h">#' + r.h + '</span>' +
+      '<a class="a" href="https://explorer.argonmine.com/address/' + encodeURIComponent(r.a) + '" target="_blank" rel="noopener">' + esc(shortAddr(r.a)) + '</a>' +
+      '<span class="v">+' + fmtArg(r.v) + ' ARG</span>' +
+      '<span class="t">' + timeAgo(r.t) + '</span></div>'
+    ).join("");
+    recentEmpty.hidden = rows.length > 0;
+  }
+
+  function addAddress(ev){
+    if (ev) ev.preventDefault();
+    const a = (addrInput.value || "").trim().toLowerCase();
+    addrError.textContent = "";
+    if (!a) return;
+    if (!/^arg1[0-9a-z]{20,90}$/.test(a)) { addrError.textContent = "地址格式不对，应该是 arg1..."; return; }
+    if (addresses.includes(a)) { addrError.textContent = "这个地址已经添加了"; return; }
+    if (addresses.length >= 30) { addrError.textContent = "最多添加 30 个地址"; return; }
+    addresses.push(a);
+    saveAddresses();
+    addrInput.value = "";
+    renderAddresses();
+    refreshAddresses();
+  }
+
+  function removeAddress(a){
+    addresses = addresses.filter(x => x !== a);
+    addrData.delete(a);
+    saveAddresses();
+    renderAddresses();
+    refreshAddresses();
+  }
+
+  function drawChart(canvas, values, color, big, heights){
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(10, rect.width), h = Math.max(10, rect.height);
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.round(w*dpr) || canvas.height !== Math.round(h*dpr)) {
+      canvas.width = Math.round(w*dpr); canvas.height = Math.round(h*dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    const padL = big ? 52 : 2, padR = big ? 10 : 2, padT = big ? 8 : 4, padB = big ? 18 : 2;
+    const iw = Math.max(1, w - padL - padR), ih = Math.max(1, h - padT - padB);
+    const vals = (values || []).map(Number).filter(x => isFinite(x));
+    if (vals.length === 1) vals.push(vals[0]);
+    if (vals.length < 2) {
+      ctx.fillStyle = "#6f6e67"; ctx.font = "11px Segoe UI, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("等待数据…", w/2, h/2 + 4);
+      return;
+    }
+    let min = Math.min(...vals), max = Math.max(...vals);
+    if (max === min) { max = min + 1; min = Math.max(0, min - 1); }
+    const span = max - min;
+    min = Math.max(0, min - span * 0.12);
+    max = max + span * 0.12;
+    const x = i => padL + (vals.length === 1 ? iw : i / (vals.length - 1) * iw);
+    const y = v => padT + ih - (v - min) / (max - min) * ih;
+    if (big) {
+      ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1;
+      ctx.fillStyle = "#6f6e67"; ctx.font = "10px Segoe UI, sans-serif"; ctx.textAlign = "right";
+      for (let i=0;i<=3;i++){
+        const yy = padT + ih * i/3;
+        ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(w-padR, yy); ctx.stroke();
+      }
+      if (heights && heights.length) {
+        ctx.textAlign = "left"; ctx.fillStyle = "#6f6e67";
+        ctx.fillText("#" + heights[0], padL, h-4);
+        ctx.textAlign = "right";
+        ctx.fillText("#" + heights[heights.length-1], w-padR, h-4);
+      }
+    }
+    const grad = ctx.createLinearGradient(0, padT, 0, padT+ih);
+    grad.addColorStop(0, color + "44");
+    grad.addColorStop(1, color + "00");
+    ctx.beginPath();
+    ctx.moveTo(x(0), padT+ih);
+    vals.forEach((v,i) => ctx.lineTo(x(i), y(v)));
+    ctx.lineTo(x(vals.length-1), padT+ih);
+    ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+
+    ctx.beginPath();
+    vals.forEach((v,i) => { if (i===0) ctx.moveTo(x(i), y(v)); else ctx.lineTo(x(i), y(v)); });
+    ctx.strokeStyle = color; ctx.lineWidth = big ? 2 : 1.8; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.stroke();
+
+    const lx = x(vals.length-1), ly = y(vals[vals.length-1]);
+    ctx.beginPath(); ctx.arc(lx, ly, big ? 3 : 2.5, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  function drawAll(){
+    drawChart($("netChart"), netHist.slice(-90), "#e0a63a", false);
+    const hs = chart && chart.points ? chart.points.map(p => p.h) : [];
+    drawChart($("bigChart"), netHist, "#e0a63a", true, hs);
+  }
+
+  async function refreshAll(){
+    if (busy || document.hidden) return;
+    busy = true;
+    try {
+      const now = Date.now();
+      const jobs = [refreshNetwork(), refreshAddresses()];
+      if (!chart || now - lastChart > 30000) { lastChart = now; jobs.push(refreshCharts()); }
+      if (!miners || now - lastMiners > 60000) { lastMiners = now; jobs.push(refreshMiners()); }
+      await Promise.allSettled(jobs);
+      $("updated").textContent = "更新 " + new Date().toLocaleTimeString();
+      $("footerRight").textContent = addresses.length + " 个地址 · " + (net ? "高度 " + (net.indexedHeight ?? "—") : "—");
+      drawAll();
+    } finally {
+      busy = false;
+    }
+  }
+
+  // events
+  $("addForm").addEventListener("submit", addAddress);
+  addrList.addEventListener("click", (e) => {
+    const b = e.target.closest(".rm");
+    if (b) removeAddress(b.getAttribute("data-a"));
+  });
+  rateEl.addEventListener("input", saveRate);
+  unitEl.addEventListener("change", saveRate);
+  window.addEventListener("resize", () => drawAll());
+
+  // init
+  try {
+    const q = (new URLSearchParams(location.search).get("addr") || "").trim().toLowerCase();
+    if (q && /^arg1[0-9a-z]{20,90}$/.test(q) && !addresses.includes(q)) {
+      addresses.push(q);
+      saveAddresses();
+    }
+  } catch (e) {}
+  loadRate();
+  renderAddresses();
+  refreshAll();
+  setInterval(refreshAll, 5000);
+})();
+</script>
+</body>
+</html>

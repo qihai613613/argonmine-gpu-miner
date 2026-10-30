@@ -1,0 +1,30 @@
+Argonmine GPU Miner is an unofficial community project.
+It is not affiliated with, endorsed by, or maintained by the Argonmine project.
+
+Third-party attributions
+------------------------
+
+1. Argonmine protocol, consensus specification, and brand assets
+   Project: https://github.com/argonchain-source/argonchain
+   License: MIT
+   The Argonmine name, logo/icon, and protocol specification belong to the
+   Argonmine project. The icon in res/argonmine.ico was converted from the
+   Argonmine brand kit (argonmine-icon-256.png) and is used only to identify
+   the coin this miner supports.
+
+2. Argon2id reference implementation
+   Algorithm: RFC 9106 / Password Hashing Competition winner
+   Reference: https://github.com/P-H-C/phc-winner-argon2
+   The portable CPU implementation in this project is a translation of the
+   public reference / golang.org/x/crypto/argon2 (Copyright 2017 The Go
+   Authors, BSD-3-Clause). See LICENSES/BSD-3-Clause.txt.
+
+3. Blake2b / SHA-256
+   Implemented from the public specifications (RFC 7693 / FIPS 180-4).
+
+4. NVIDIA and CUDA
+   NVIDIA and CUDA are trademarks of NVIDIA Corporation. This project is not
+   affiliated with or endorsed by NVIDIA.
+
+The MIT license for this project is in LICENSE. It does not override the
+licenses or trademarks of the projects and assets listed above.
